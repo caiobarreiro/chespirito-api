@@ -1,0 +1,36 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: chespirito-api-spring (Spring Boot + DynamoDB)
+Globals:
+  Function:
+    Runtime: java21
+    MemorySize: 1024
+    Timeout: 20
+Resources:
+  ChespiritoApiFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: chespirito-api-spring
+      Handler: com.caio.chespirito.StreamLambdaHandler::handleRequest
+      CodeUri: ChespiritoApiFunction
+      Environment:
+        Variables:
+          JDBC_URL: jdbc:postgresql://chespirito-db.c0j0cw8km0p5.us-east-1.rds.amazonaws.com:5432/chespirito
+          DB_USER: chespirito
+          DB_PASS: chespiritomasterdb_Tafny
+      Policies:
+      - AWSLambdaBasicExecutionRole
+      - AWSLambdaVPCAccessExecutionRole
+      Events:
+        RestApiEvent:
+          Type: Api
+          Properties:
+            Path: /{proxy+}
+            Method: ANY
+    Metadata:
+      SamResourceId: ChespiritoApiFunction
+Outputs:
+  ApiUrl:
+    Description: REST API endpoint
+    Value:
+      Fn::Sub: https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/Prod
