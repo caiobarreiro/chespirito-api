@@ -2,6 +2,7 @@ package com.caio.chespirito.controller;
 
 import com.caio.chespirito.dto.Character.CharacterDTO;
 import com.caio.chespirito.dto.Character.CharacterListDTO;
+import com.caio.chespirito.dto.CreateCharacterRequest;
 import com.caio.chespirito.service.CharacterService;
 
 import org.springframework.http.ResponseEntity;
@@ -29,14 +30,17 @@ public class CharacterController {
   public ResponseEntity<CharacterDTO> get(@PathVariable("id") UUID id) {
     return service.getCharacter(id);
   }
-  
-//
-//  @PostMapping()
-//  @ResponseStatus(HttpStatus.CREATED)
-//  public CharacterEntity create(@RequestBody CharacterEntity body) {
-//    if (body.getName() != null) {
-//      body.setName(body.getName().trim());
-//    }
-//    return repo.save(body);
-//  }
+
+  @PostMapping
+  public ResponseEntity<CharacterDTO> create(@RequestBody CreateCharacterRequest body) {
+    return service.createCharacter(body);
+  }
+
+  @PutMapping("/{id}")
+  public ResponseEntity<CharacterDTO> update(
+      @PathVariable("id") UUID id,
+      @RequestBody CreateCharacterRequest body
+  ) {
+    return service.updateCharacter(id, body);
+  }
 }

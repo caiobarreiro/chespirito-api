@@ -10,6 +10,7 @@ import com.caio.chespirito.dto.CreateShowRequest;
 import com.caio.chespirito.dto.ShowDTO;
 import com.caio.chespirito.model.ShowEntity;
 import com.caio.chespirito.repo.ShowRepository;
+import com.caio.chespirito.utils.Utils;
 
 @Service
 public class ShowService {
@@ -35,17 +36,10 @@ public class ShowService {
 
   public ShowDTO createShow(CreateShowRequest body) {
     ShowEntity entity = new ShowEntity();
-    entity.setName(normalize(body.getName()));
-    entity.setNameEs(normalize(body.getNameEs()));
+    entity.setName(Utils.normalize(body.getName()));
+    entity.setNameEs(Utils.normalize(body.getNameEs()));
     entity.setStartDate(body.getStartDate());
     entity.setEndDate(body.getEndDate());
     return ShowDTO.of(repo.save(entity));
-  }
-
-  private String normalize(String value) {
-    if (value == null) {
-      return null;
-    }
-    return value.trim();
   }
 }
