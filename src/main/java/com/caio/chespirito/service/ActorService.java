@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import com.caio.chespirito.dto.ActorDTO;
+import com.caio.chespirito.model.ActorEntity;
 import com.caio.chespirito.repo.ActorRepository;
 
 @Service
@@ -29,5 +30,13 @@ public class ActorService {
         return repo.findWithCharactersById(id)
             .map(a -> ResponseEntity.ok(ActorDTO.of(a)))
             .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    public ActorDTO createActor(ActorEntity body) {
+        body.setId(null);
+        if (body.getName() != null) {
+            body.setName(body.getName().trim());
+        }
+        return ActorDTO.of(repo.save(body));
     }
 }
