@@ -20,11 +20,26 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Debug OIDC claims
+        run: |
+          echo "ACTIONS_ID_TOKEN_REQUEST_URL=$ACTIONS_ID_TOKEN_REQUEST_URL"
+          echo "ACTIONS_ID_TOKEN_REQUEST_TOKEN is set? $([[ -n "$ACTIONS_ID_TOKEN_REQUEST_TOKEN" ]] && echo yes || echo no)"
+          curl -sS -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            "$ACTIONS_ID_TOKEN_REQUEST_URL&audience=sts.amazonaws.com" | jq -r '.value' > token.jwt
+          python - << 'PY'
+        import base64, json
+        t=open('token.jwt').read().split('.')
+        payload=t[1] + '=' * (-len(t[1]) % 4)
+        print(json.dumps(json.loads(base64.urlsafe_b64decode(payload)), indent=2))
+        PY
+
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
           role-to-assume: arn:aws:iam::343541496517:role/github-actions-chespirito-api-deploy
           aws-region: ${{ env.AWS_REGION }}
+          role-session-name: gha-chespirito-api
+          audience: sts.amazonaws.com
 
       - name: Setup SAM
         uses: aws-actions/setup-sam@v2
