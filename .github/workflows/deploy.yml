@@ -36,9 +36,9 @@ jobs:
       - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: arn:aws:iam::343541496517:role/github-actions-chespirito-api-deploy
+          role-to-assume: arn:aws:iam::343541496517:role/github-actions-chespirito-deploy
           aws-region: ${{ env.AWS_REGION }}
-          role-session-name: gha-chespirito-api
+          role-session-name: gha-chespirito
           audience: sts.amazonaws.com
 
       - name: Setup SAM
