@@ -4,11 +4,16 @@ import java.util.List;
 import java.util.UUID;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.caio.chespirito.dto.ActorDTO;
+import com.caio.chespirito.model.ActorEntity;
 import com.caio.chespirito.service.ActorService;
 
 @RestController
@@ -30,15 +35,11 @@ public class ActorController {
     return service.getActor(id);
   }
 
-//  @PostMapping("/actors")
-//  @ResponseStatus(HttpStatus.CREATED)
-//  public ActorEntity create(@RequestBody ActorEntity body) {
-//    body.setId(null); // força UUID novo
-//    if (body.getName() != null) {
-//      body.setName(body.getName().trim());
-//    }
-//    return repo.save(body);
-//  }
+  @PostMapping("/actors")
+  @ResponseStatus(HttpStatus.CREATED)
+  public ActorDTO create(@RequestBody ActorEntity body) {
+    return service.createActor(body);
+  }
   
  
 }
