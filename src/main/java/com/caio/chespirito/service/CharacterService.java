@@ -3,12 +3,16 @@ package com.caio.chespirito.service;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import com.caio.chespirito.dto.Character.CharacterDTO;
 import com.caio.chespirito.dto.Character.CharacterListDTO;
+import com.caio.chespirito.dto.CreateCharacterRequest;
+import com.caio.chespirito.model.CharacterEntity;
 import com.caio.chespirito.repo.CharacterRepository;
+import com.caio.chespirito.utils.Utils;
 
 @Service
 public class CharacterService {
@@ -32,4 +36,39 @@ public class CharacterService {
             .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
+    public ResponseEntity<CharacterDTO> createCharacter(CreateCharacterRequest body) {
+        if (body.getActor() == null) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        CharacterEntity entity = new CharacterEntity();
+        entity.setName(Utils.normalize(body.getName()));
+        entity.setOriginalName(Utils.normalize(body.getOriginalName()));
+        body.getActor().setName(Utils.normalize(body.getActor().getName()));
+        body.getActor().setFullName(Utils.normalize(body.getActor().getFullName()));
+        entity.setActor(body.getActor());
+        CharacterEntity saved = repo.save(entity);
+        return ResponseEntity.status(HttpStatus.CREATED).body(CharacterDTO.of(saved));
+    }
+
+    public ResponseEntity<CharacterDTO> updateCharacter(UUID id, CreateCharacterRequest body) {
+        if (body.getId() == null || !body.getId().equals(id)) {
+            return ResponseEntity.badRequest().build();
+        }
+        if (body.getActor() == null) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        return repo.findById(id)
+            .map(existing -> {
+                existing.setName(Utils.normalize(body.getName()));
+                existing.setOriginalName(Utils.normalize(body.getOriginalName()));
+                body.getActor().setName(Utils.normalize(body.getActor().getName()));
+                body.getActor().setFullName(Utils.normalize(body.getActor().getFullName()));
+                existing.setActor(body.getActor());
+                CharacterEntity saved = repo.save(existing);
+                return ResponseEntity.ok(CharacterDTO.of(saved));
+            })
+            .orElseGet(() -> ResponseEntity.notFound().build());
+    }
 }

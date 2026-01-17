@@ -29,6 +29,7 @@ public class CharacterEntity {
     private ActorEntity actor;
 
     public UUID getId() { return id; }
+    public void setId(UUID id) { this.id = id; }
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }
 
@@ -36,6 +37,7 @@ public class CharacterEntity {
     public void setOriginalName(String originalName) { this.originalName = originalName; }
 
     public ActorEntity getActor() { return actor; }
+    public void setActor(ActorEntity actor) { this.actor = actor; }
     
     public List<EpisodeEntity> getEpisodes() { return episodes; }
 }
