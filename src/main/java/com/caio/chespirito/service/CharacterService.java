@@ -45,8 +45,6 @@ public class CharacterService {
         CharacterEntity entity = new CharacterEntity();
         entity.setName(Utils.normalize(body.getName()));
         entity.setOriginalName(Utils.normalize(body.getOriginalName()));
-        body.getActor().setName(Utils.normalize(body.getActor().getName()));
-        body.getActor().setFullName(Utils.normalize(body.getActor().getFullName()));
         entity.setActor(body.getActor());
         CharacterEntity saved = repo.save(entity);
         return ResponseEntity.status(HttpStatus.CREATED).body(CharacterDTO.of(saved));
@@ -64,8 +62,6 @@ public class CharacterService {
             .map(existing -> {
                 existing.setName(Utils.normalize(body.getName()));
                 existing.setOriginalName(Utils.normalize(body.getOriginalName()));
-                body.getActor().setName(Utils.normalize(body.getActor().getName()));
-                body.getActor().setFullName(Utils.normalize(body.getActor().getFullName()));
                 existing.setActor(body.getActor());
                 CharacterEntity saved = repo.save(existing);
                 CharacterDTO dto = CharacterDTO.of(saved);
