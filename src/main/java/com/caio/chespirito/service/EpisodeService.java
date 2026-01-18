@@ -34,18 +34,19 @@ public class EpisodeService {
         }
 
         List<UUID> normalizedCharacterIds = (characterIds == null || characterIds.isEmpty()) ? null : characterIds;
+        Integer characterCount = normalizedCharacterIds == null ? null : normalizedCharacterIds.size();
         boolean hasQuery = q != null && !q.trim().isEmpty();
 
         // Sem q -> lista tudo (com show + characters)
         if (!hasQuery) {
-            return repo.findAllWithCharactersAndShow(showId, startDate, endDate, normalizedCharacterIds)
+            return repo.findAllWithCharactersAndShow(showId, startDate, endDate, normalizedCharacterIds, characterCount)
                     .stream()
                     .map(EpisodeDTO::of)
                     .collect(Collectors.toList());
         }
 
         // Com q -> busca ids ordenados por relevância (full-text + fuzzy), filtrando showId se vier
-        List<UUID> ids = repo.searchIdsByTextAndShow(q, showId, startDate, endDate, normalizedCharacterIds);
+        List<UUID> ids = repo.searchIdsByTextAndShow(q, showId, startDate, endDate, normalizedCharacterIds, characterCount);
 
         // Fallback: se não achou por texto, retorna tudo do show (ou global se showId null)
         if (ids == null || ids.isEmpty()) {
