@@ -1,7 +1,9 @@
 package com.caio.chespirito.service;
 
+import com.caio.chespirito.dto.Character.CharacterDTO;
 import com.caio.chespirito.dto.EpisodeDTO;
-import com.caio.chespirito.model.EpisodeEntity;
+import com.caio.chespirito.model.CharacterEntity;
+import com.caio.chespirito.repo.CharacterRepository;
 import com.caio.chespirito.repo.EpisodeRepository;
 
 import org.springframework.http.ResponseEntity;
@@ -14,9 +16,11 @@ import java.util.stream.Collectors;
 public class EpisodeService {
 
     private final EpisodeRepository repo;
+    private final CharacterRepository characterRepo;
 
-    public EpisodeService(EpisodeRepository repo) {
+    public EpisodeService(EpisodeRepository repo, CharacterRepository characterRepo) {
         this.repo = repo;
+        this.characterRepo = characterRepo;
     }
 
     public List<EpisodeDTO> getEpisodes(String q, UUID showId) {
@@ -56,6 +60,41 @@ public class EpisodeService {
     public ResponseEntity<EpisodeDTO> getEpisode(UUID episodeId) {
         return repo.findOneWithCharactersAndShow(episodeId)
             .map(a -> ResponseEntity.ok(EpisodeDTO.of(a)))
+            .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    public ResponseEntity<EpisodeDTO> updateEpisodeCharacters(UUID episodeId, List<CharacterDTO> characters) {
+        if (characters == null) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        Set<UUID> characterIds = characters.stream()
+            .map(character -> character.id)
+            .collect(Collectors.toSet());
+
+        if (characterIds.stream().anyMatch(Objects::isNull)) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        return repo.findOneWithCharactersAndShow(episodeId)
+            .map(episode -> {
+                Set<CharacterEntity> updatedCharacters = new HashSet<>();
+                if (!characterIds.isEmpty()) {
+                    List<CharacterEntity> foundCharacters = characterRepo.findAllById(characterIds);
+                    if (foundCharacters.size() != characterIds.size()) {
+                        return ResponseEntity.notFound().build();
+                    }
+                    updatedCharacters.addAll(foundCharacters);
+                }
+
+                episode.getCharacters().clear();
+                episode.getCharacters().addAll(updatedCharacters);
+                repo.save(episode);
+
+                return repo.findOneWithCharactersAndShow(episodeId)
+                    .map(found -> ResponseEntity.ok(EpisodeDTO.of(found)))
+                    .orElseGet(() -> ResponseEntity.notFound().build());
+            })
             .orElseGet(() -> ResponseEntity.notFound().build());
     }
 }
