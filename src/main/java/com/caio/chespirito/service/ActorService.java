@@ -39,4 +39,26 @@ public class ActorService {
         }
         return ActorDTO.of(repo.save(body));
     }
+
+    public ResponseEntity<ActorDTO> updateActor(UUID id, ActorEntity body) {
+        if (body.getId() == null || !body.getId().equals(id)) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        return repo.findById(id)
+            .map(existing -> {
+                existing.setName(body.getName());
+                existing.setFullName(body.getFullName());
+                existing.setDob(body.getDob());
+                existing.setDod(body.getDod());
+                if (existing.getName() != null) {
+                    existing.setName(existing.getName().trim());
+                }
+                ActorEntity saved = repo.save(existing);
+                return repo.findWithCharactersById(saved.getId())
+                    .map(found -> ResponseEntity.ok(ActorDTO.of(found)))
+                    .orElseGet(() -> ResponseEntity.notFound().build());
+            })
+            .orElseGet(() -> ResponseEntity.notFound().build());
+    }
 }
