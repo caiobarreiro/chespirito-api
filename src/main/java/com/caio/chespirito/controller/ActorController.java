@@ -8,6 +8,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
@@ -40,6 +41,12 @@ public class ActorController {
   public ActorDTO create(@RequestBody ActorEntity body) {
     return service.createActor(body);
   }
-  
- 
+
+  @PutMapping("/actors/{id}")
+  public ResponseEntity<ActorDTO> update(
+      @PathVariable("id") UUID id,
+      @RequestBody ActorEntity body
+  ) {
+    return service.updateActor(id, body);
+  }
 }

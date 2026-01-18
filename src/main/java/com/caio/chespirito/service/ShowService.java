@@ -3,6 +3,7 @@ package com.caio.chespirito.service;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -41,5 +42,18 @@ public class ShowService {
     entity.setStartDate(body.getStartDate());
     entity.setEndDate(body.getEndDate());
     return ShowDTO.of(repo.save(entity));
+  }
+
+  public ResponseEntity<ShowDTO> updateShow(UUID id, CreateShowRequest body) {
+    return repo.findById(id)
+        .map(existing -> {
+          existing.setName(Utils.normalize(body.getName()));
+          existing.setNameEs(Utils.normalize(body.getNameEs()));
+          existing.setStartDate(body.getStartDate());
+          existing.setEndDate(body.getEndDate());
+          ShowEntity saved = repo.save(existing);
+          return ResponseEntity.status(HttpStatus.OK).body(ShowDTO.of(saved));
+        })
+        .orElseGet(() -> ResponseEntity.notFound().build());
   }
 }
