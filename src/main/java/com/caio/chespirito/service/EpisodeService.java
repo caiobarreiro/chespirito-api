@@ -76,25 +76,27 @@ public class EpisodeService {
             return ResponseEntity.<EpisodeDTO>badRequest().build();
         }
 
+        Optional<EpisodeEntity> episode = repo.findOneWithCharactersAndShow(episodeId);
+        if (episode.isEmpty()) {
+            return ResponseEntity.<EpisodeDTO>notFound().build();
+        }
+
+        Set<CharacterEntity> updatedCharacters = new HashSet<>();
+        if (!characterIds.isEmpty()) {
+            List<CharacterEntity> foundCharacters = characterRepo.findAllById(characterIds);
+            if (foundCharacters.size() != characterIds.size()) {
+                return ResponseEntity.<EpisodeDTO>notFound().build();
+            }
+            updatedCharacters.addAll(foundCharacters);
+        }
+
+        EpisodeEntity existingEpisode = episode.get();
+        existingEpisode.getCharacters().clear();
+        existingEpisode.getCharacters().addAll(updatedCharacters);
+        repo.save(existingEpisode);
+
         return repo.findOneWithCharactersAndShow(episodeId)
-            .map(episode -> {
-                Set<CharacterEntity> updatedCharacters = new HashSet<>();
-                if (!characterIds.isEmpty()) {
-                    List<CharacterEntity> foundCharacters = characterRepo.findAllById(characterIds);
-                    if (foundCharacters.size() != characterIds.size()) {
-                        return ResponseEntity.<EpisodeDTO>notFound().build();
-                    }
-                    updatedCharacters.addAll(foundCharacters);
-                }
-
-                episode.getCharacters().clear();
-                episode.getCharacters().addAll(updatedCharacters);
-                repo.save(episode);
-
-                return repo.findOneWithCharactersAndShow(episodeId)
-                    .map(found -> ResponseEntity.ok(EpisodeDTO.of(found)))
-                    .orElseGet(() -> ResponseEntity.<EpisodeDTO>notFound().build());
-            })
+            .map(found -> ResponseEntity.ok(EpisodeDTO.of(found)))
             .orElseGet(() -> ResponseEntity.<EpisodeDTO>notFound().build());
     }
 }
