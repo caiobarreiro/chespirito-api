@@ -7,7 +7,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import com.caio.chespirito.dto.ActorSummaryDTO;
 import com.caio.chespirito.dto.Character.CharacterDTO;
 import com.caio.chespirito.dto.Character.CharacterListDTO;
 import com.caio.chespirito.dto.CreateCharacterRequest;
@@ -64,9 +63,9 @@ public class CharacterService {
                 existing.setOriginalName(Utils.normalize(body.getOriginalName()));
                 existing.setActor(body.getActor());
                 CharacterEntity saved = repo.save(existing);
-                CharacterDTO dto = CharacterDTO.of(saved);
-                dto.actor = ActorSummaryDTO.of(body.getActor());
-                return ResponseEntity.ok(dto);
+                return repo.findWithActorById(saved.getId())
+                    .map(found -> ResponseEntity.ok(CharacterDTO.of(found)))
+                    .orElseGet(() -> ResponseEntity.notFound().build());
             })
             .orElseGet(() -> ResponseEntity.notFound().build());
     }
