@@ -10,6 +10,7 @@ import com.caio.chespirito.repo.EpisodeRepository;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -24,19 +25,27 @@ public class EpisodeService {
         this.characterRepo = characterRepo;
     }
 
-    public List<EpisodeDTO> getEpisodes(String q, UUID showId) {
+    public List<EpisodeDTO> getEpisodes(String q, UUID showId, Integer year, List<UUID> characterIds) {
+        LocalDate startDate = null;
+        LocalDate endDate = null;
+        if (year != null) {
+            startDate = LocalDate.of(year, 1, 1);
+            endDate = startDate.plusYears(1);
+        }
+
+        List<UUID> normalizedCharacterIds = (characterIds == null || characterIds.isEmpty()) ? null : characterIds;
         boolean hasQuery = q != null && !q.trim().isEmpty();
 
         // Sem q -> lista tudo (com show + characters)
         if (!hasQuery) {
-            return repo.findAllWithCharactersAndShow(showId)
+            return repo.findAllWithCharactersAndShow(showId, startDate, endDate, normalizedCharacterIds)
                     .stream()
                     .map(EpisodeDTO::of)
                     .collect(Collectors.toList());
         }
 
         // Com q -> busca ids ordenados por relevância (full-text + fuzzy), filtrando showId se vier
-        List<UUID> ids = repo.searchIdsByTextAndShow(q, showId);
+        List<UUID> ids = repo.searchIdsByTextAndShow(q, showId, startDate, endDate, normalizedCharacterIds);
 
         // Fallback: se não achou por texto, retorna tudo do show (ou global se showId null)
         if (ids == null || ids.isEmpty()) {
