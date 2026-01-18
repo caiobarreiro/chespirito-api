@@ -3,6 +3,7 @@ package com.caio.chespirito.service;
 import com.caio.chespirito.dto.Character.CharacterDTO;
 import com.caio.chespirito.dto.EpisodeDTO;
 import com.caio.chespirito.model.CharacterEntity;
+import com.caio.chespirito.model.EpisodeEntity;
 import com.caio.chespirito.repo.CharacterRepository;
 import com.caio.chespirito.repo.EpisodeRepository;
 
