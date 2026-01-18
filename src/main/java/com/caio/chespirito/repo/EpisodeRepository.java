@@ -17,8 +17,15 @@ public interface EpisodeRepository extends JpaRepository<EpisodeEntity, UUID> {
             "left join fetch e.show " +
             "left join fetch e.characters " +
             "where (:showId is null or e.show.id = :showId) " +
+            "and (:startDate is null or (e.airDate >= :startDate and e.airDate < :endDate)) " +
+            "and (:characterIds is null or exists (select 1 from e.characters c where c.id in :characterIds)) " +
             "order by e.season asc, e.episodeNumber asc")
-    List<EpisodeEntity> findAllWithCharactersAndShow(@Param("showId") UUID showId);
+    List<EpisodeEntity> findAllWithCharactersAndShow(
+        @Param("showId") UUID showId,
+        @Param("startDate") java.time.LocalDate startDate,
+        @Param("endDate") java.time.LocalDate endDate,
+        @Param("characterIds") List<UUID> characterIds
+    );
     
     @Query("select distinct e " +
         "from EpisodeEntity e " +
@@ -63,6 +70,8 @@ public interface EpisodeRepository extends JpaRepository<EpisodeEntity, UUID> {
             "  cross join ts " +
             "  where ts.raw is not null " +
             "    and (:showId is null or e.show_id = :showId) " +
+            "    and (:startDate is null or (e.air_date >= :startDate and e.air_date < :endDate)) " +
+            "    and (:characterIds is null or exists (select 1 from episode_characters ec where ec.episode_id = e.id and ec.character_id in (:characterIds))) " +
             "    and ( " +
             "         (e.search_vector @@ ts.q_pt) " +
             "      or (e.search_vector @@ ts.q_es) " +
@@ -75,7 +84,13 @@ public interface EpisodeRepository extends JpaRepository<EpisodeEntity, UUID> {
             "select r.id " +
             "from ranked r " +
             "order by r.relevance desc, r.season, r.episode_number", nativeQuery = true)
-    List<UUID> searchIdsByTextAndShow(@Param("q") String q, @Param("showId") UUID showId);
+    List<UUID> searchIdsByTextAndShow(
+        @Param("q") String q,
+        @Param("showId") UUID showId,
+        @Param("startDate") java.time.LocalDate startDate,
+        @Param("endDate") java.time.LocalDate endDate,
+        @Param("characterIds") List<UUID> characterIds
+    );
 
     // Carrega episódios por ids + show + characters em uma tacada
     @Query("select distinct e " +
