@@ -33,7 +33,7 @@ public class EpisodeController {
         return service.getEpisode(id);
     }
 
-    @PutMapping("/characters/{id}")
+    @PutMapping("/{id}/characters")
     public ResponseEntity<EpisodeDTO> updateCharacters(
         @PathVariable("id") UUID id,
         @RequestBody List<CharacterDTO> characters
