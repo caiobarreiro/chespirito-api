@@ -1,6 +1,7 @@
 package com.caio.chespirito.controller;
 
 import com.caio.chespirito.dto.Character.CharacterDTO;
+import com.caio.chespirito.dto.CreateEpisodeRequest;
 import com.caio.chespirito.dto.EpisodeDTO;
 import com.caio.chespirito.service.EpisodeService;
 
@@ -33,6 +34,11 @@ public class EpisodeController {
     @GetMapping("/{id}")
     public ResponseEntity<EpisodeDTO> get(@PathVariable("id") UUID id) {
         return service.getEpisode(id);
+    }
+
+    @PostMapping
+    public ResponseEntity<EpisodeDTO> create(@RequestBody CreateEpisodeRequest body) {
+        return service.createEpisode(body);
     }
 
     @PutMapping("/{id}/characters")

@@ -17,6 +17,7 @@ public class EpisodeDTO {
     public String title;
     public String titleEs;
     public String synopsisPt;
+    public String synopsisEs;
 
     public List<CharacterSummaryDto> characters;
 
@@ -31,6 +32,7 @@ public class EpisodeDTO {
         dto.title = e.getTitle();
         dto.titleEs = e.getTitleEs();
         dto.synopsisPt = e.getSynopsisPt();
+        dto.synopsisEs = e.getSynopsisEs();
         dto.characters = e.getCharacters()
             .stream()
             .map(CharacterSummaryDto::of)
