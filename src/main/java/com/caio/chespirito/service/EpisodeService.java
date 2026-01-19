@@ -119,7 +119,7 @@ public class EpisodeService {
     }
 
     public ResponseEntity<EpisodeDTO> createEpisode(CreateEpisodeRequest body) {
-        if (body == null || body.getShow() == null || body.getShow().getId() == null) {
+        if (body == null || body.getShow() == null || body.getShow().id == null) {
             return ResponseEntity.badRequest().build();
         }
         if (body.getSeason() == null
@@ -131,7 +131,7 @@ public class EpisodeService {
             return ResponseEntity.badRequest().build();
         }
 
-        ShowEntity show = showRepo.findById(body.getShow().getId()).orElse(null);
+        ShowEntity show = showRepo.findById(body.getShow().id).orElse(null);
         if (show == null) {
             return ResponseEntity.notFound().build();
         }
