@@ -4,9 +4,14 @@ import com.caio.chespirito.dto.Character.CharacterDTO;
 import com.caio.chespirito.dto.EpisodeDTO;
 import com.caio.chespirito.model.CharacterEntity;
 import com.caio.chespirito.model.EpisodeEntity;
+import com.caio.chespirito.model.ShowEntity;
 import com.caio.chespirito.repo.CharacterRepository;
 import com.caio.chespirito.repo.EpisodeRepository;
+import com.caio.chespirito.repo.ShowRepository;
+import com.caio.chespirito.utils.Utils;
+import com.caio.chespirito.dto.CreateEpisodeRequest;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
@@ -19,10 +24,12 @@ public class EpisodeService {
 
     private final EpisodeRepository repo;
     private final CharacterRepository characterRepo;
+    private final ShowRepository showRepo;
 
-    public EpisodeService(EpisodeRepository repo, CharacterRepository characterRepo) {
+    public EpisodeService(EpisodeRepository repo, CharacterRepository characterRepo, ShowRepository showRepo) {
         this.repo = repo;
         this.characterRepo = characterRepo;
+        this.showRepo = showRepo;
     }
 
     public List<EpisodeDTO> getEpisodes(String q, UUID showId, Integer year, List<UUID> characterIds) {
@@ -109,5 +116,38 @@ public class EpisodeService {
         return repo.findOneWithCharactersAndShow(episodeId)
             .map(found -> ResponseEntity.ok(EpisodeDTO.of(found)))
             .orElseGet(() -> ResponseEntity.<EpisodeDTO>notFound().build());
+    }
+
+    public ResponseEntity<EpisodeDTO> createEpisode(CreateEpisodeRequest body) {
+        if (body == null || body.getShow() == null || body.getShow().getId() == null) {
+            return ResponseEntity.badRequest().build();
+        }
+        if (body.getSeason() == null
+            || body.getEpisodeNumber() == null
+            || body.getTitle() == null
+            || body.getTitleES() == null
+            || body.getSynopsisPT() == null
+            || body.getSynopsisEs() == null) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        ShowEntity show = showRepo.findById(body.getShow().getId()).orElse(null);
+        if (show == null) {
+            return ResponseEntity.notFound().build();
+        }
+
+        EpisodeEntity entity = new EpisodeEntity();
+        entity.setShow(show);
+        entity.setSeason(body.getSeason());
+        entity.setEpisodeNumber(body.getEpisodeNumber());
+        entity.setAirDate(body.getAirDate());
+        entity.setTitle(Utils.normalize(body.getTitle()));
+        entity.setTitleEs(Utils.normalize(body.getTitleES()));
+        entity.setSynopsisPt(Utils.normalize(body.getSynopsisPT()));
+        entity.setSynopsisEs(Utils.normalize(body.getSynopsisEs()));
+        EpisodeEntity saved = repo.save(entity);
+        return repo.findOneWithCharactersAndShow(saved.getId())
+            .map(found -> ResponseEntity.status(HttpStatus.CREATED).body(EpisodeDTO.of(found)))
+            .orElseGet(() -> ResponseEntity.status(HttpStatus.CREATED).body(EpisodeDTO.of(saved)));
     }
 }
