@@ -12,7 +12,7 @@ import java.util.UUID;
 
 public interface EpisodeRepository extends JpaRepository<EpisodeEntity, UUID> {
 
-    @Query("select distinct e.id " +
+    @Query("select e.id " +
             "from EpisodeEntity e " +
             "where (:showId is null or e.show.id = :showId) " +
             "and (cast(:startDate as date) is null or (e.airDate >= :startDate and e.airDate < :endDate)) " +
