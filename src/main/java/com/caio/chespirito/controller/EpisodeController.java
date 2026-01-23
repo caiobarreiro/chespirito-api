@@ -26,9 +26,11 @@ public class EpisodeController {
         @RequestParam(value = "q", required = false) String q,
         @RequestParam(value = "showId", required = false) UUID showId,
         @RequestParam(value = "year", required = false) Integer year,
-        @RequestParam(value = "characters", required = false) List<UUID> characters
+        @RequestParam(value = "characters", required = false) List<UUID> characters,
+        @RequestParam(value = "page", required = false) Integer page,
+        @RequestParam(value = "size", required = false) Integer size
     ) {
-        return service.getEpisodes(q, showId, year, characters);
+        return service.getEpisodes(q, showId, year, characters, page, size);
     }
     
     @GetMapping("/{id}")
