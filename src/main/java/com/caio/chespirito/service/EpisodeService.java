@@ -14,6 +14,8 @@ import com.caio.chespirito.dto.CreateEpisodeRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 
 import java.time.LocalDate;
 import java.util.*;
@@ -32,7 +34,7 @@ public class EpisodeService {
         this.showRepo = showRepo;
     }
 
-    public List<EpisodeDTO> getEpisodes(String q, UUID showId, Integer year, List<UUID> characterIds) {
+    public List<EpisodeDTO> getEpisodes(String q, UUID showId, Integer year, List<UUID> characterIds, Integer page, Integer size) {
         LocalDate startDate = null;
         LocalDate endDate = null;
         if (year != null) {
@@ -40,20 +42,37 @@ public class EpisodeService {
             endDate = startDate.plusYears(1);
         }
 
+        int normalizedPage = page == null || page < 0 ? 0 : page;
+        int normalizedSize = size == null || size <= 0 ? 20 : Math.min(size, 100);
+        Pageable pageable = PageRequest.of(normalizedPage, normalizedSize);
+
         List<UUID> normalizedCharacterIds = (characterIds == null || characterIds.isEmpty()) ? null : characterIds;
         Integer characterCount = normalizedCharacterIds == null ? null : normalizedCharacterIds.size();
         boolean hasQuery = q != null && !q.trim().isEmpty();
 
         // Sem q -> lista tudo (com show + characters)
         if (!hasQuery) {
-            return repo.findAllWithCharactersAndShow(showId, startDate, endDate, normalizedCharacterIds, characterCount)
-                    .stream()
-                    .map(EpisodeDTO::of)
-                    .collect(Collectors.toList());
+            List<UUID> ids = repo.findIdsWithCharactersAndShow(showId, startDate, endDate, normalizedCharacterIds, characterCount, pageable);
+            if (ids == null || ids.isEmpty()) {
+                return List.of();
+            }
+            return repo.findByIdInWithCharactersAndShow(ids)
+                .stream()
+                .map(EpisodeDTO::of)
+                .collect(Collectors.toList());
         }
 
         // Com q -> busca ids ordenados por relevância (full-text + fuzzy), filtrando showId se vier
-        List<UUID> ids = repo.searchIdsByTextAndShow(q, showId, startDate, endDate, normalizedCharacterIds, characterCount);
+        List<UUID> ids = repo.searchIdsByTextAndShow(
+            q,
+            showId,
+            startDate,
+            endDate,
+            normalizedCharacterIds,
+            characterCount,
+            normalizedSize,
+            normalizedPage * normalizedSize
+        );
 
         // Fallback: se não achou por texto, retorna tudo do show (ou global se showId null)
         if (ids == null || ids.isEmpty()) {

@@ -1,6 +1,7 @@
 package com.caio.chespirito.repo;
 
 import com.caio.chespirito.model.EpisodeEntity;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -11,21 +12,19 @@ import java.util.UUID;
 
 public interface EpisodeRepository extends JpaRepository<EpisodeEntity, UUID> {
 
-    // Lista (com show + characters) e filtro opcional de showId
-    @Query("select distinct e " +
+    @Query("select distinct e.id " +
             "from EpisodeEntity e " +
-            "left join fetch e.show " +
-            "left join fetch e.characters " +
             "where (:showId is null or e.show.id = :showId) " +
             "and (cast(:startDate as date) is null or (e.airDate >= :startDate and e.airDate < :endDate)) " +
             "and (:characterIds is null or (select count(distinct c.id) from e.characters c where c.id in :characterIds) = :characterCount) " +
             "order by e.season asc, e.episodeNumber asc")
-    List<EpisodeEntity> findAllWithCharactersAndShow(
+    List<UUID> findIdsWithCharactersAndShow(
         @Param("showId") UUID showId,
         @Param("startDate") java.time.LocalDate startDate,
         @Param("endDate") java.time.LocalDate endDate,
         @Param("characterIds") List<UUID> characterIds,
-        @Param("characterCount") Integer characterCount
+        @Param("characterCount") Integer characterCount,
+        Pageable pageable
     );
     
     @Query("select distinct e " +
@@ -84,14 +83,17 @@ public interface EpisodeRepository extends JpaRepository<EpisodeEntity, UUID> {
             ") " +
             "select r.id " +
             "from ranked r " +
-            "order by r.relevance desc, r.season, r.episode_number", nativeQuery = true)
+            "order by r.relevance desc, r.season, r.episode_number " +
+            "limit :limit offset :offset", nativeQuery = true)
     List<UUID> searchIdsByTextAndShow(
         @Param("q") String q,
         @Param("showId") UUID showId,
         @Param("startDate") java.time.LocalDate startDate,
         @Param("endDate") java.time.LocalDate endDate,
         @Param("characterIds") List<UUID> characterIds,
-        @Param("characterCount") Integer characterCount
+        @Param("characterCount") Integer characterCount,
+        @Param("limit") Integer limit,
+        @Param("offset") Integer offset
     );
 
     // Carrega episódios por ids + show + characters em uma tacada
