@@ -5,7 +5,7 @@ import com.caio.chespirito.dto.Character.CharacterListDTO;
 import com.caio.chespirito.dto.CreateCharacterRequest;
 import com.caio.chespirito.service.CharacterService;
 
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -27,17 +27,18 @@ public class CharacterController {
   }
 
   @GetMapping("/{id}")
-  public ResponseEntity<CharacterDTO> get(@PathVariable("id") UUID id) {
+  public CharacterDTO get(@PathVariable("id") UUID id) {
     return service.getCharacter(id);
   }
 
   @PostMapping
-  public ResponseEntity<CharacterDTO> create(@RequestBody CreateCharacterRequest body) {
+  @ResponseStatus(HttpStatus.CREATED)
+  public CharacterDTO create(@RequestBody CreateCharacterRequest body) {
     return service.createCharacter(body);
   }
 
   @PutMapping("/{id}")
-  public ResponseEntity<CharacterDTO> update(
+  public CharacterDTO update(
       @PathVariable("id") UUID id,
       @RequestBody CreateCharacterRequest body
   ) {

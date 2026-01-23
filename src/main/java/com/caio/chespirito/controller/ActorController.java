@@ -3,7 +3,6 @@ package com.caio.chespirito.controller;
 import java.util.List;
 import java.util.UUID;
 
-import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -32,7 +31,7 @@ public class ActorController {
   }
   
   @GetMapping("/actors/{id}")
-  public ResponseEntity<ActorDTO> get(@PathVariable("id") UUID id) {
+  public ActorDTO get(@PathVariable("id") UUID id) {
     return service.getActor(id);
   }
 
@@ -43,7 +42,7 @@ public class ActorController {
   }
 
   @PutMapping("/actors/{id}")
-  public ResponseEntity<ActorDTO> update(
+  public ActorDTO update(
       @PathVariable("id") UUID id,
       @RequestBody ActorEntity body
   ) {

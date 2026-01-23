@@ -4,8 +4,8 @@ import java.util.List;
 import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.caio.chespirito.dto.Character.CharacterDTO;
 import com.caio.chespirito.dto.Character.CharacterListDTO;
@@ -26,19 +26,19 @@ public class CharacterService {
     public List<CharacterListDTO> getCharacters() {
         return repo.findAll()
             .stream()
-            .map(a -> ResponseEntity.ok(CharacterListDTO.of(a)).getBody())
+            .map(CharacterListDTO::of)
             .toList();
     }
     
-    public ResponseEntity<CharacterDTO> getCharacter(UUID id) {
+    public CharacterDTO getCharacter(UUID id) {
         return repo.findWithActorById(id)
-            .map(a -> ResponseEntity.ok(CharacterDTO.of(a)))
-            .orElseGet(() -> ResponseEntity.notFound().build());
+            .map(CharacterDTO::of)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Character not found"));
     }
 
-    public ResponseEntity<CharacterDTO> createCharacter(CreateCharacterRequest body) {
-        if (body.getActor() == null) {
-            return ResponseEntity.badRequest().build();
+    public CharacterDTO createCharacter(CreateCharacterRequest body) {
+        if (body == null || body.getActor() == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Character actor is required");
         }
 
         CharacterEntity entity = new CharacterEntity();
@@ -46,15 +46,15 @@ public class CharacterService {
         entity.setOriginalName(Utils.normalize(body.getOriginalName()));
         entity.setActor(body.getActor());
         CharacterEntity saved = repo.save(entity);
-        return ResponseEntity.status(HttpStatus.CREATED).body(CharacterDTO.of(saved));
+        return CharacterDTO.of(saved);
     }
 
-    public ResponseEntity<CharacterDTO> updateCharacter(UUID id, CreateCharacterRequest body) {
-        if (body.getId() == null || !body.getId().equals(id)) {
-            return ResponseEntity.badRequest().build();
+    public CharacterDTO updateCharacter(UUID id, CreateCharacterRequest body) {
+        if (body == null || body.getId() == null || !body.getId().equals(id)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Character id mismatch");
         }
         if (body.getActor() == null) {
-            return ResponseEntity.badRequest().build();
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Character actor is required");
         }
 
         return repo.findById(id)
@@ -64,9 +64,9 @@ public class CharacterService {
                 existing.setActor(body.getActor());
                 CharacterEntity saved = repo.save(existing);
                 return repo.findWithActorById(saved.getId())
-                    .map(found -> ResponseEntity.ok(CharacterDTO.of(found)))
-                    .orElseGet(() -> ResponseEntity.notFound().build());
+                    .map(CharacterDTO::of)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Character not found"));
             })
-            .orElseGet(() -> ResponseEntity.notFound().build());
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Character not found"));
     }
 }

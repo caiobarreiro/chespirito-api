@@ -5,7 +5,7 @@ import com.caio.chespirito.dto.CreateEpisodeRequest;
 import com.caio.chespirito.dto.EpisodeDTO;
 import com.caio.chespirito.service.EpisodeService;
 
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -34,17 +34,18 @@ public class EpisodeController {
     }
     
     @GetMapping("/{id}")
-    public ResponseEntity<EpisodeDTO> get(@PathVariable("id") UUID id) {
+    public EpisodeDTO get(@PathVariable("id") UUID id) {
         return service.getEpisode(id);
     }
 
     @PostMapping
-    public ResponseEntity<EpisodeDTO> create(@RequestBody CreateEpisodeRequest body) {
+    @ResponseStatus(HttpStatus.CREATED)
+    public EpisodeDTO create(@RequestBody CreateEpisodeRequest body) {
         return service.createEpisode(body);
     }
 
     @PutMapping("/{id}/characters")
-    public ResponseEntity<EpisodeDTO> updateCharacters(
+    public EpisodeDTO updateCharacters(
         @PathVariable("id") UUID id,
         @RequestBody List<CharacterDTO> characters
     ) {

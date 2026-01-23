@@ -3,8 +3,9 @@ package com.caio.chespirito.service;
 import java.util.List;
 import java.util.UUID;
 
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.caio.chespirito.dto.ActorDTO;
 import com.caio.chespirito.model.ActorEntity;
@@ -22,17 +23,20 @@ public class ActorService {
     public List<ActorDTO> getActors() {
         return repo.findAll()
             .stream()
-            .map(a -> ResponseEntity.ok(ActorDTO.of(a)).getBody())
+            .map(ActorDTO::of)
             .toList();
     }
     
-    public ResponseEntity<ActorDTO> getActor(UUID id) {
+    public ActorDTO getActor(UUID id) {
         return repo.findWithCharactersById(id)
-            .map(a -> ResponseEntity.ok(ActorDTO.of(a)))
-            .orElseGet(() -> ResponseEntity.notFound().build());
+            .map(ActorDTO::of)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Actor not found"));
     }
 
     public ActorDTO createActor(ActorEntity body) {
+        if (body == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Actor payload is required");
+        }
         body.setId(null);
         if (body.getName() != null) {
             body.setName(body.getName().trim());
@@ -40,9 +44,9 @@ public class ActorService {
         return ActorDTO.of(repo.save(body));
     }
 
-    public ResponseEntity<ActorDTO> updateActor(UUID id, ActorEntity body) {
-        if (body.getId() == null || !body.getId().equals(id)) {
-            return ResponseEntity.badRequest().build();
+    public ActorDTO updateActor(UUID id, ActorEntity body) {
+        if (body == null || body.getId() == null || !body.getId().equals(id)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Actor id mismatch");
         }
 
         return repo.findById(id)
@@ -56,9 +60,9 @@ public class ActorService {
                 }
                 ActorEntity saved = repo.save(existing);
                 return repo.findWithCharactersById(saved.getId())
-                    .map(found -> ResponseEntity.ok(ActorDTO.of(found)))
-                    .orElseGet(() -> ResponseEntity.notFound().build());
+                    .map(ActorDTO::of)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Actor not found"));
             })
-            .orElseGet(() -> ResponseEntity.notFound().build());
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Actor not found"));
     }
 }
