@@ -4,8 +4,8 @@ import java.util.List;
 import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.caio.chespirito.dto.CreateShowRequest;
 import com.caio.chespirito.dto.ShowDTO;
@@ -25,17 +25,20 @@ public class ShowService {
   public List<ShowDTO> getShows() {
     return repo.findAll()
         .stream()
-        .map(s -> ResponseEntity.ok(ShowDTO.of(s)).getBody())
+        .map(ShowDTO::of)
         .toList();
   }
 
-  public ResponseEntity<ShowDTO> getShow(UUID id) {
+  public ShowDTO getShow(UUID id) {
     return repo.findById(id)
-        .map(s -> ResponseEntity.ok(ShowDTO.of(s)))
-        .orElseGet(() -> ResponseEntity.notFound().build());
+        .map(ShowDTO::of)
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Show not found"));
   }
 
   public ShowDTO createShow(CreateShowRequest body) {
+    if (body == null) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Show payload is required");
+    }
     ShowEntity entity = new ShowEntity();
     entity.setName(Utils.normalize(body.getName()));
     entity.setNameEs(Utils.normalize(body.getNameEs()));
@@ -44,7 +47,10 @@ public class ShowService {
     return ShowDTO.of(repo.save(entity));
   }
 
-  public ResponseEntity<ShowDTO> updateShow(UUID id, CreateShowRequest body) {
+  public ShowDTO updateShow(UUID id, CreateShowRequest body) {
+    if (body == null) {
+      throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Show payload is required");
+    }
     return repo.findById(id)
         .map(existing -> {
           existing.setName(Utils.normalize(body.getName()));
@@ -52,8 +58,8 @@ public class ShowService {
           existing.setStartDate(body.getStartDate());
           existing.setEndDate(body.getEndDate());
           ShowEntity saved = repo.save(existing);
-          return ResponseEntity.status(HttpStatus.OK).body(ShowDTO.of(saved));
+          return ShowDTO.of(saved);
         })
-        .orElseGet(() -> ResponseEntity.notFound().build());
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Show not found"));
   }
 }

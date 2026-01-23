@@ -12,10 +12,10 @@ import com.caio.chespirito.utils.Utils;
 import com.caio.chespirito.dto.CreateEpisodeRequest;
 
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDate;
 import java.util.*;
@@ -94,15 +94,15 @@ public class EpisodeService {
         return loaded;
     }
     
-    public ResponseEntity<EpisodeDTO> getEpisode(UUID episodeId) {
+    public EpisodeDTO getEpisode(UUID episodeId) {
         return repo.findOneWithCharactersAndShow(episodeId)
-            .map(a -> ResponseEntity.ok(EpisodeDTO.of(a)))
-            .orElseGet(() -> ResponseEntity.<EpisodeDTO>notFound().build());
+            .map(EpisodeDTO::of)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Episode not found"));
     }
 
-    public ResponseEntity<EpisodeDTO> updateEpisodeCharacters(UUID episodeId, List<CharacterDTO> characters) {
+    public EpisodeDTO updateEpisodeCharacters(UUID episodeId, List<CharacterDTO> characters) {
         if (characters == null) {
-            return ResponseEntity.<EpisodeDTO>badRequest().build();
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Characters payload is required");
         }
 
         Set<UUID> characterIds = characters.stream()
@@ -110,19 +110,19 @@ public class EpisodeService {
             .collect(Collectors.toSet());
 
         if (characterIds.stream().anyMatch(Objects::isNull)) {
-            return ResponseEntity.<EpisodeDTO>badRequest().build();
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Character ids are required");
         }
 
         Optional<EpisodeEntity> episode = repo.findOneWithCharactersAndShow(episodeId);
         if (episode.isEmpty()) {
-            return ResponseEntity.<EpisodeDTO>notFound().build();
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Episode not found");
         }
 
         Set<CharacterEntity> updatedCharacters = new HashSet<>();
         if (!characterIds.isEmpty()) {
             List<CharacterEntity> foundCharacters = characterRepo.findAllById(characterIds);
             if (foundCharacters.size() != characterIds.size()) {
-                return ResponseEntity.<EpisodeDTO>notFound().build();
+                throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Character not found");
             }
             updatedCharacters.addAll(foundCharacters);
         }
@@ -133,13 +133,13 @@ public class EpisodeService {
         repo.save(existingEpisode);
 
         return repo.findOneWithCharactersAndShow(episodeId)
-            .map(found -> ResponseEntity.ok(EpisodeDTO.of(found)))
-            .orElseGet(() -> ResponseEntity.<EpisodeDTO>notFound().build());
+            .map(EpisodeDTO::of)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Episode not found"));
     }
 
-    public ResponseEntity<EpisodeDTO> createEpisode(CreateEpisodeRequest body) {
+    public EpisodeDTO createEpisode(CreateEpisodeRequest body) {
         if (body == null || body.getShow() == null || body.getShow().id == null) {
-            return ResponseEntity.badRequest().build();
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Show is required");
         }
         if (body.getSeason() == null
             || body.getEpisodeNumber() == null
@@ -147,12 +147,12 @@ public class EpisodeService {
             || body.getTitleES() == null
             || body.getSynopsisPT() == null
             || body.getSynopsisEs() == null) {
-            return ResponseEntity.badRequest().build();
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Episode fields are required");
         }
 
         ShowEntity show = showRepo.findById(body.getShow().id).orElse(null);
         if (show == null) {
-            return ResponseEntity.notFound().build();
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Show not found");
         }
 
         EpisodeEntity entity = new EpisodeEntity();
@@ -166,7 +166,7 @@ public class EpisodeService {
         entity.setSynopsisEs(Utils.normalize(body.getSynopsisEs()));
         EpisodeEntity saved = repo.save(entity);
         return repo.findOneWithCharactersAndShow(saved.getId())
-            .map(found -> ResponseEntity.status(HttpStatus.CREATED).body(EpisodeDTO.of(found)))
-            .orElseGet(() -> ResponseEntity.status(HttpStatus.CREATED).body(EpisodeDTO.of(saved)));
+            .map(EpisodeDTO::of)
+            .orElseGet(() -> EpisodeDTO.of(saved));
     }
 }

@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -34,7 +33,7 @@ public class ShowController {
   }
 
   @GetMapping("/{id}")
-  public ResponseEntity<ShowDTO> get(@PathVariable("id") UUID id) {
+  public ShowDTO get(@PathVariable("id") UUID id) {
     return service.getShow(id);
   }
 
@@ -45,7 +44,7 @@ public class ShowController {
   }
 
   @PutMapping("/{id}")
-  public ResponseEntity<ShowDTO> update(
+  public ShowDTO update(
       @PathVariable("id") UUID id,
       @RequestBody CreateShowRequest body
   ) {
